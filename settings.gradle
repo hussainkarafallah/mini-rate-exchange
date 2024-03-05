@@ -1,0 +1,6 @@
+rootProject.name = 'demozz'
+
+include 'order-service'
+include 'interface-common'
+
+

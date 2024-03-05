@@ -1,0 +1,7 @@
+apply plugin: 'org.springframework.boot'
+apply from: "../build.common.gradle"
+
+bootJar {
+    enabled = true
+    mainClass = "com.example.hussainkarafallah.DemoApplication"
+}

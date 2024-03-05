@@ -1,0 +1,60 @@
+plugins {
+	id 'java' 
+	id 'org.springframework.boot' version '3.1.0' apply false
+	id 'com.avast.gradle.docker-compose' version '0.17.6' apply false
+	id 'io.spring.dependency-management' version '1.1.4' apply false
+}
+
+allprojects {
+	repositories{
+    	mavenCentral()
+	}
+}
+
+
+
+subprojects{
+
+	apply plugin: 'java'
+	apply plugin: 'io.spring.dependency-management' 
+
+	java {
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_17
+	}
+
+
+	repositories {
+		mavenCentral()
+	}
+
+
+	dependencies {
+		compileOnly 'org.projectlombok:lombok:1.18.30'
+		annotationProcessor 'org.projectlombok:lombok:1.18.30'
+		testImplementation 'org.projectlombok:lombok:1.18.30'
+		testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+
+	}
+	configurations {
+		compileOnly {
+			extendsFrom annotationProcessor
+		}
+	}
+
+}
+
+apply plugin: 'com.avast.gradle.docker-compose' 
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+
+group = 'com.example.hussainkarafallah.tradeexchange'
+version = '0.0.1-SNAPSHOT'
+
+
+

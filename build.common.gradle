@@ -1,0 +1,37 @@
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot' 
+apply plugin: 'io.spring.dependency-management'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+
+
+dependencies {
+	implementation project(':interface-common')
+	
+	// jackson
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
+
+
+	// spring related
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+
+	// caching
+	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+	
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.awaitility:awaitility:4.2.0'
+}
