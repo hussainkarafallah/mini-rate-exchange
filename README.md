@@ -16,6 +16,10 @@ Fulfillments are an abstract concept that can be matching orders, or external li
 Fulfillment have the following:
 * Id
 * State (MATCHED / REVERSED / EXECUTED)
+    * Matched means this fulfillment is not final
+    * REVERSED means the fulfillment is canceled
+    * EXECUTED means it was executed (a trade effectively happened)
+    * state can only go from MATCHED to REVERSED or EXECUTED
 * Fulfilled Price
 * Fulfilled quanity
 * Fulfilling Entity Id (i.e other order matching)
