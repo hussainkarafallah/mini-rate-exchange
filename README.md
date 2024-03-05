@@ -54,6 +54,9 @@ Composite orders only have an ID, symbol and a list of underlying stock orders.
 7- Price is updated (ExecuteTrade)
 
 
+### Prefix Comb UUID
+For Ids I am using UUIDs with the prefixed with the epoch in millis. So Ids are incremental in time and already encapuslate the ordering of stock orders.
+
 ## Architecture
 
 * The implementation uses a pool of threads to process events
