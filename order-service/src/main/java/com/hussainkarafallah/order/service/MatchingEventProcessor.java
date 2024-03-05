@@ -65,7 +65,7 @@ public class MatchingEventProcessor implements EventHandler<FulfillmentMatchedEv
     @Override
     public void onEvent(FulfillmentMatchedEvent event) {
         if(event != null){
-            queues.get(event.getInstrument().hashCode() % NUM_THREADS).add(event);
+            queues.get(Math.abs(event.getInstrument().hashCode()) % NUM_THREADS).add(event);
         }
     }
 

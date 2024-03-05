@@ -15,14 +15,8 @@ import lombok.NoArgsConstructor;
 public class FulfillmentSnapshot {
 
     private UUID id;
-
-    private String instrument;
-
     private String state;
-
-    private BigDecimal targetQuantity;
-
+    private UUID fulfillerId;
     private BigDecimal fulfilledQuantity;
-    private BigDecimal targetPrice;
     private BigDecimal fulfilledPrice;
 }

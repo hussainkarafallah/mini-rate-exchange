@@ -52,11 +52,17 @@ public class MatchingEngine implements Runnable {
 
     public void acceptBuyOrder(MatchingRequest buyOrder) {
         // first we try to match with the best price possible
-        if (!sellOrdersPool.isEmpty() && canMatch(buyOrder, sellOrdersPool.peek())) {
-            match(buyOrder , sellOrdersPool.poll());
+        Iterator<MatchingRequest> iterator = sellOrdersPool.iterator();
+        while(iterator.hasNext()){
+            MatchingRequest sellOrder = iterator.next();
+            if (canMatch(buyOrder, sellOrder)) {
+                match(buyOrder , sellOrder);
+                iterator.remove();
+                return;
+            }
         }
         // we try to match with a sell order with no price 
-        else if(!sellOrdersWithNoPrice.isEmpty()) {
+        if(!sellOrdersWithNoPrice.isEmpty()) {
             match(buyOrder , sellOrdersWithNoPrice.poll());
         }
         // we could not match and we add to our waiting list
@@ -73,7 +79,7 @@ public class MatchingEngine implements Runnable {
             if (canMatch(buyOrder, sellOrder)) {
                 match(buyOrder, sellOrder);
                 iterator.remove();
-                break;
+                return;
             }
         }
         if(sellOrder.getPrice() == null){
@@ -85,6 +91,12 @@ public class MatchingEngine implements Runnable {
     }
 
     private boolean canMatch(MatchingRequest buyOrder, MatchingRequest sellOrder){
+        if(buyOrder.getInstrument() != sellOrder.getInstrument()){
+            return false;
+        }
+        if(buyOrder.isPartial() && sellOrder.isPartial()){
+            return false;
+        }
         if(buyOrder.getPrice() == null && sellOrder.getPrice() == null){
             return false;
         }
@@ -100,9 +112,7 @@ public class MatchingEngine implements Runnable {
         FulfillmentMatchedEvent event = FulfillmentMatchedEvent.builder()
             .matchId(UuidUtils.generatePrefixCombUuid())
             .instrument(buyOrder.getInstrument())
-            .buyFulfillmentId(buyOrder.getRequestId())
             .buyOrderId(buyOrder.getOrderId())
-            .sellFulfillmentId(sellOrder.getRequestId())
             .sellOrderId(sellOrder.getOrderId())
             .quantity(quantity)
             .price(price)

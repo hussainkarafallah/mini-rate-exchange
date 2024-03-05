@@ -1,5 +1,7 @@
 package com.hussainkarafallah.interfaces;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,7 +24,13 @@ public class OrderSnapshot {
 
     private String type;
 
+    private BigDecimal targetQuantity;
+
+    private BigDecimal targetPrice;
+
     private List<FulfillmentSnapshot> fulfillments;
 
     private Long traderId;
+
+    private Instant dateUpdated;
 }

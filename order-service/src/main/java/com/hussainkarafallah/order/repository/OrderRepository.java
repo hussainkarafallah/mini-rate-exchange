@@ -3,10 +3,16 @@ package com.hussainkarafallah.order.repository;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.hussainkarafallah.order.domain.Order;
+import com.hussainkarafallah.order.domain.CompositeOrder;
+import com.hussainkarafallah.order.domain.StockOrder;
 
 public interface OrderRepository {
-    Optional<Order> findById(UUID id);
+    Optional<StockOrder> findById(UUID id);
 
-    void save(Order order);
+    void save(StockOrder order);
+
+    void register(CompositeOrder CompositeOrder);
+
+    Optional<CompositeOrder> findBasketById(UUID id);
 }
+

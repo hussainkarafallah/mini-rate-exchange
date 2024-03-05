@@ -11,23 +11,25 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.jdbc.JdbcTestUtils;
 
 import com.hussainkarafallah.domain.OrderState;
 import com.hussainkarafallah.interfaces.FulfillmentMatchedEvent;
-import com.hussainkarafallah.order.domain.Order;
+import com.hussainkarafallah.order.domain.CompositeOrder;
+import com.hussainkarafallah.order.domain.StockOrder;
 import com.hussainkarafallah.order.repository.OrderRepository;
 import com.hussainkarafallah.order.repository.PriceBook;
 import com.hussainkarafallah.order.service.CreateOrder;
+import com.hussainkarafallah.order.service.commands.CreateOrderCommand;
 
 import lombok.SneakyThrows;
 
 @SpringBootTest
 @ContextConfiguration(classes = {TestApplication.class, TestConfig.class, RecordingEventPublisher.class})
 @ActiveProfiles("test")
+@DirtiesContext
 public abstract class BaseIntTest {
 
     @Autowired
@@ -35,13 +37,6 @@ public abstract class BaseIntTest {
 
     @Autowired
     protected OrderRepository orderRepository;
-
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    private TestKafkaConsumer testKafkaConsumer;
 
     @Autowired
     protected PriceBook priceBook;
@@ -54,8 +49,6 @@ public abstract class BaseIntTest {
     @BeforeEach
     @SneakyThrows
     void init(){
-        JdbcTestUtils.deleteFromTables(jdbcTemplate,"orders");
-        //testKafkaConsumer.reset();
     }
 
 
@@ -75,13 +68,31 @@ public abstract class BaseIntTest {
         assertEquals(orderState , orderRepository.findById(orderId).orElseThrow().getState());
     }
 
-    protected FulfillmentMatchedEvent awaitMatchBetween(Order buyorder , Order sellorder){
+    protected FulfillmentMatchedEvent awaitMatchBetween(StockOrder buyorder , StockOrder sellorder){
         return awaitMessageSent(
             FulfillmentMatchedEvent.class,
             ev -> ev.getBuyOrderId().equals(buyorder.getId())
             && ev.getSellOrderId().equals(sellorder.getId())
         );
+    }
 
+    protected FulfillmentMatchedEvent awaitMatchBetween(StockOrder buyorder , UUID sellId){
+        var sellOrder = orderRepository.findById(sellId).orElseThrow();
+        return awaitMessageSent(
+            FulfillmentMatchedEvent.class,
+            ev -> ev.getBuyOrderId().equals(buyorder.getId())
+            && ev.getSellOrderId().equals(sellOrder.getId())
+        );
+    }
+
+    protected StockOrder createOrder(CreateOrderCommand cmd){
+        var id = createOrder.exec(cmd);
+        return orderRepository.findById(id).orElseThrow();
+    }
+
+    protected CompositeOrder createCompositeOrder(CreateOrderCommand cmd){
+        var id = createOrder.exec(cmd);
+        return orderRepository.findBasketById(id).orElseThrow();
     }
 
 

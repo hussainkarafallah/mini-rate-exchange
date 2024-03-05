@@ -19,4 +19,5 @@ public class RequestMatchingEvent {
     BigDecimal price;
     BigDecimal quantity;
     String type;
+    boolean isPartial;
 }

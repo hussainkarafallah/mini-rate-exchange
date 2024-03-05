@@ -17,9 +17,7 @@ import lombok.NoArgsConstructor;
 public class FulfillmentMatchedEvent {
     private UUID matchId;
     private Instrument instrument;
-    private UUID buyFulfillmentId;
     private UUID buyOrderId;
-    private UUID sellFulfillmentId;
     private UUID sellOrderId;
     private BigDecimal price;
     private BigDecimal quantity;

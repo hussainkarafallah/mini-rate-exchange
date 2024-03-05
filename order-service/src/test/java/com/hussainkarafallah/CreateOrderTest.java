@@ -11,8 +11,9 @@ import com.hussainkarafallah.domain.Instrument;
 import com.hussainkarafallah.domain.OrderType;
 import com.hussainkarafallah.interfaces.OrderUpdateEvent;
 import com.hussainkarafallah.interfaces.RequestMatchingEvent;
-import com.hussainkarafallah.order.domain.Order;
+import com.hussainkarafallah.order.domain.CompositeOrder;
 import com.hussainkarafallah.order.domain.PriceBookEntry;
+import com.hussainkarafallah.order.domain.StockOrder;
 import com.hussainkarafallah.order.service.commands.CreateOrderCommand;
 
 class CreateOrderTest extends BaseIntTest{
@@ -29,10 +30,10 @@ class CreateOrderTest extends BaseIntTest{
 			.price(Optional.of(aDecimal(12)))
 			.build();
 		// when order is created
-		Order created = createOrder.exec(createOrderCommand);
+		StockOrder created = createOrder(createOrderCommand);
 		// order is saved correctly in db
-		Order fetchedBack = orderRepository.findById(created.getId()).orElseThrow();
-		assertEquals(OrderType.BUY, fetchedBack.getOrderType());
+		StockOrder fetchedBack = orderRepository.findById(created.getId()).orElseThrow();
+		assertEquals(OrderType.BUY, fetchedBack.getType());
 		assertEquals(123939L, fetchedBack.getTraderId());
 		// order update event is published
 		awaitMessageSent(
@@ -68,15 +69,16 @@ class CreateOrderTest extends BaseIntTest{
 			.build();
 		// when
 		// when order is created
-		Order created = createOrder.exec(createOrderCommand);
+		CompositeOrder created = createCompositeOrder(createOrderCommand);
 		// order is saved correctly in db
-		Order fetchedBack = orderRepository.findById(created.getId()).orElseThrow();
-		assertEquals(Instrument.MGDTH , fetchedBack.getFulfillments().get(1).getInstrument());
-		assertEquals(aDecimal(100) , fetchedBack.getFulfillments().get(1).getTargetQuantity());
-		assertEquals(aDecimal(180) , fetchedBack.getFulfillments().get(1).getTargetPrice());
-		assertEquals(Instrument.MTLCA , fetchedBack.getFulfillments().get(0).getInstrument());
-		assertEquals(aDecimal(100) , fetchedBack.getFulfillments().get(0).getTargetQuantity());
-		assertEquals(aDecimal(90) , fetchedBack.getFulfillments().get(0).getTargetPrice());
+		StockOrder fst = orderRepository.findById(created.getStockOrdersIds().get(0)).orElseThrow();
+		StockOrder snd = orderRepository.findById(created.getStockOrdersIds().get(1)).orElseThrow();
+		assertEquals(Instrument.MGDTH , snd.getInstrument());
+		assertEquals(aDecimal(100) , snd.getTargetQuantity());
+		assertEquals(180L , snd.getTargetPrice().longValue());
+		assertEquals(Instrument.MTLCA , fst.getInstrument());
+		assertEquals(aDecimal(100) , fst.getTargetQuantity());
+		assertEquals(aDecimal(90) , fst.getTargetPrice());
 		// matching is requested
 		awaitMessageSent(
 			RequestMatchingEvent.class,

@@ -1,19 +1,16 @@
 package com.hussainkarafallah.order.service;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
 import com.hussainkarafallah.domain.FulfillmentState;
-import com.hussainkarafallah.domain.OrderState;
 import com.hussainkarafallah.interfaces.OrderSnapshot;
+import com.hussainkarafallah.order.domain.CompositeOrder;
 import com.hussainkarafallah.order.domain.Fulfillment;
-import com.hussainkarafallah.order.domain.Order;
+import com.hussainkarafallah.order.domain.StockOrder;
 import com.hussainkarafallah.order.mappers.OrderMapper;
 import com.hussainkarafallah.order.repository.OrderRepository;
-import com.hussainkarafallah.order.service.commands.RenewFulfillmentCommand;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,40 +20,38 @@ public class CancelOrder {
     
     private final OrderRepository orderRepository;
 
-    private final PublishOrderUpdate publishOrderUpdate;
+    private final ReverseFulfillment reverseFulfillment;
 
-    private final RenewFulfillment renewFulfillment;
+    private final PublishOrderUpdate publishOrderUpdate;
     
     void cancelOrder(UUID orderId){
-        Optional<Order> maybeOrder = orderRepository.findById(orderId);
-        if(maybeOrder.isEmpty()){
-            return;
+        var maybeComposite = orderRepository.findBasketById(orderId);
+        if(maybeComposite.isPresent()){
+            CompositeOrder compositeOrder = maybeComposite.get();
+            compositeOrder.getStockOrdersIds().forEach(this::cancelOrder);
         }
-        Order order = maybeOrder.get();
-        OrderSnapshot beforeCancellationSnapshot = OrderMapper.toOrderSnapshot(order);
-        //
-        List<Fulfillment> cancelledFulfuFulfillments = cancelledFulfillments(order);
-        order.setFullfilments(cancelledFulfuFulfillments);
-        order.setState(OrderState.CLOSED);
-        //
-        orderRepository.save(order);
-        publishOrderUpdate.onOrderUpdated(beforeCancellationSnapshot, OrderMapper.toOrderSnapshot(order));
+        var maybeStock = orderRepository.findById(orderId);
+        if(maybeStock.isPresent()){
+            cancelStockOrder(maybeStock.get());
+        }
+        
     }
 
 
-    private List<Fulfillment> cancelledFulfillments(Order order){
-        return order.getFulfillments().stream().map(fulfillment -> {
-            if(fulfillment.getState().equals(FulfillmentState.FULFILLED)){
-                renewFulfillment.exec(new RenewFulfillmentCommand(
-                    fulfillment.getFulfillerId(),
-                    fulfillment.getInstrument(),
-                    fulfillment.getFulfilledQuantity(),
-                    fulfillment.getFulfilledPrice()
-                ));
-                fulfillment.setState(FulfillmentState.REVERSED);
+    private void cancelStockOrder(StockOrder order){
+        OrderSnapshot beforeCancellationSnapshot = OrderMapper.toOrderSnapshot(order);
+        for(Fulfillment fulfillment : order.getFulfillments()){
+            if(fulfillment.getState().equals(FulfillmentState.MATCHED)){
+                reverseFulfillment.exec(
+                    orderRepository.findById(fulfillment.getFulfillerId()).orElseThrow(),
+                    fulfillment.getId()
+                );
+                fulfillment.close();
             }
-            return fulfillment;
+        }
+        order.close();
+        orderRepository.save(order);
+        publishOrderUpdate.onOrderUpdated(beforeCancellationSnapshot, OrderMapper.toOrderSnapshot(order));
         
-        }).toList();
     }
 }

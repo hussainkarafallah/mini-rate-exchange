@@ -1,6 +1,7 @@
 package com.hussainkarafallah;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -24,7 +25,7 @@ public class RecordingEventPublisher extends EventPublisherImpl {
 
     public RecordingEventPublisher() {
         super();
-        this.recordedEvents = new ArrayList<>();
+        this.recordedEvents = Collections.synchronizedList(new ArrayList<>());
     }
 
     @Override

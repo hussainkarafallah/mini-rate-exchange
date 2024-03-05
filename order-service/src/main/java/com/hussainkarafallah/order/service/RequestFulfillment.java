@@ -6,8 +6,8 @@ import com.hussainkarafallah.EventPublisher;
 import com.hussainkarafallah.domain.MatchingType;
 import com.hussainkarafallah.domain.OrderType;
 import com.hussainkarafallah.interfaces.RequestMatchingEvent;
-import com.hussainkarafallah.order.domain.Fulfillment;
-import com.hussainkarafallah.order.service.commands.RequestFulfillmentCommand;
+import com.hussainkarafallah.order.domain.StockOrder;
+import com.hussainkarafallah.utils.UuidUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,16 +19,15 @@ public class RequestFulfillment {
 
     private final EventPublisher eventPublisher;
     
-    
-    void exec(RequestFulfillmentCommand command){
-        Fulfillment fulfillment = command.getFulfillment();
+    void exec(StockOrder order){
         RequestMatchingEvent event = RequestMatchingEvent.builder()
-            .requestId(fulfillment.getId())
-            .orderId(command.getOrderId())
-            .instrument(fulfillment.getInstrument().name())
-            .price(fulfillment.getTargetPrice())
-            .quantity(fulfillment.getTargetQuantity())
-            .type(getMatchingType(command.getType()).name())
+            .requestId(UuidUtils.generatePrefixCombUuid())
+            .orderId(order.getId())
+            .instrument(order.getInstrument().name())
+            .price(order.getTargetPrice())
+            .quantity(order.anticipatedFulfillment())
+            .type(getMatchingType(order.getType()).name())
+            .isPartial(order.getBasketId() != null)
             .build();
         log.info("requesting new fulfillment {} of {} for order {}", event.getQuantity(), event.getInstrument(), event.getOrderId());
         eventPublisher.publish(event);

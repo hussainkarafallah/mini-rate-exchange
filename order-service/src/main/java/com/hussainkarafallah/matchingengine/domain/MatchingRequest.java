@@ -26,4 +26,5 @@ public class MatchingRequest {
     private BigDecimal quantity;
     @NonNull
     private MatchingType type;
+    private boolean partial;
 }

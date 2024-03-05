@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import com.hussainkarafallah.EventPublisher;
 import com.hussainkarafallah.interfaces.OrderSnapshot;
 import com.hussainkarafallah.interfaces.OrderUpdateEvent;
-import com.hussainkarafallah.order.domain.Order;
+import com.hussainkarafallah.order.domain.StockOrder;
 import com.hussainkarafallah.order.mappers.OrderMapper;
 import com.hussainkarafallah.utils.UuidUtils;
 
@@ -20,7 +20,7 @@ public class PublishOrderUpdate {
 
     private final EventPublisher eventPublisher;
 
-    public void onOrderCreated(@NonNull Order order) {
+    public void onOrderCreated(@NonNull StockOrder order) {
         onOrderUpdated(null, OrderMapper.toOrderSnapshot(order));
     }
 

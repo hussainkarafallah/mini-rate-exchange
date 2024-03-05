@@ -51,11 +51,10 @@ public class MatchingRequestProcessor implements EventHandler<RequestMatchingEve
         /*
             this does not guarantee idempotency but meant for optimization and removing duplicates
             because regular messaging systems are at least once delivery. Our order logic must handle matches idempotently
-            Also in case of incidents the cache might be cleared
         */
         if (processedOrdersCache.getIfPresent(request.getRequestId()) == null) {
             processedOrdersCache.put(request.getRequestId(), true);
-            queues.get(request.getInstrument().hashCode() % NUM_THREADS).add(toMatchingRequest(request));
+            queues.get(Math.abs(request.getInstrument().hashCode()) % NUM_THREADS).add(toMatchingRequest(request));
         }
     }
 
@@ -68,6 +67,7 @@ public class MatchingRequestProcessor implements EventHandler<RequestMatchingEve
                 .price(event.getPrice())
                 .quantity(event.getQuantity())
                 .type(MatchingType.valueOf(event.getType()))
+                .partial(event.isPartial())
                 .build();
         } catch(Exception ex){
             log.error("Unrecognized event payload in matching engine event with id {}", event.getRequestId(), ex);
